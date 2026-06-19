@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Interativo Animado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #000;
+        }
+
+        #quiz-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Camada 1: Imagem de Fundo Estática */
+        .bg-static {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('image_399e42.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 2;
+            transition: opacity 0.1s ease-in-out;
+        }
+
+        /* Camada 2: Vídeos de Fundo */
+        .video-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            display: none;
+        }
+
+        /* Interface Totalmente Centralizada */
+        .quiz-interface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* Caixa da Pergunta */
+        .pergunta-box {
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 25px 40px;
+            border-radius: 8px;
+            border: 3px solid #fff;
+            text-align: center;
+            max-width: 700px;
+            width: 100%;
+            margin-bottom: 30px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Grid das 4 Alternativas */
+        .alternativas-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* Container do Botão + Quadrado do Lucky Block */
+        .opcao-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        /* O quadradinho com o Lucky Block fixo */
+        .quadrado-icone {
+            width: 60px;
+            height: 60px;
+            background-image: url('LuckyBlock.webp');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #fff;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        /* Botão de Resposta Ajustado */
+        .btn-opcao {
+            flex: 1;
+            height: 60px;
+            padding: 0 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: rgba(20, 20, 20, 0.9);
+            border: 2px solid #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            white-space: normal;
+            line-height: 1.2;
+            transition: all 0.2s ease;
+        }
+
+        .btn-opcao:hover {
+            background: #fff;
+            color: #000;
+            transform: translateX(5px);
+        }
+
+        /* Efeito de sumir */
+        .escondido {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quiz-container">
+        <div class="bg-static" id="fundo-estatico"></div>
+
+        <video id="video-erro-a" class="video-layer" preload="auto" playsinline muted><source src="Erro_Letra_A.mp4" type="video/mp4"></video>
+        <video id="video-erro-b" class="video-layer" preload="auto" playsinline muted><source src="Erro_Letra_B.mp4" type="video/mp4"></video>
+        <video id="video-erro-c" class="video-layer" preload="auto" playsinline muted><source src="Erro_Letra_C.mp4" type="video/mp4"></video>
+        <video id="video-erro-d" class="video-layer" preload="auto" playsinline muted><source src="Erro_Letra_D.mp4" type="video/mp4"></video>
+
+        <video id="video-acerto-a" class="video-layer" preload="auto" playsinline muted><source src="Acerto_Letra_A.mp4" type="video/mp4"></video>
+        <video id="video-acerto-b" class="video-layer" preload="auto" playsinline muted><source src="Acerto_Letra_B.mp4" type="video/mp4"></video>
+        <video id="video-acerto-c" class="video-layer" preload="auto" playsinline muted><source src="Acerto_Letra_C.mp4" type="video/mp4"></video>
+        <video id="video-acerto-d" class="video-layer" preload="auto" playsinline muted><source src="Acerto_Letra_D.mp4" type="video/mp4"></video>
+
+        <div class="quiz-interface" id="interface-quiz">
+            <div class="pergunta-box">
+                <h2 id="texto-pergunta">Carregando pergunta...</h2>
+            </div>
+
+            <div class="alternativas-grid">
+                <div class="opcao-container">
+                    <div class="quadrado-icone"></div>
+                    <button class="btn-opcao" id="btn-a" onclick="verificarResposta('a')">A) Carregando...</button>
+                </div>
+
+                <div class="opcao-container">
+                    <div class="quadrado-icone"></div>
+                    <button class="btn-opcao" id="btn-b" onclick="verificarResposta('b')">B) Carregando...</button>
+                </div>
+
+                <div class="opcao-container">
+                    <div class="quadrado-icone"></div>
+                    <button class="btn-opcao" id="btn-c" onclick="verificarResposta('c')">C) Carregando...</button>
+                </div>
+
+                <div class="opcao-container">
+                    <div class="quadrado-icone"></div>
+                    <button class="btn-opcao" id="btn-d" onclick="verificarResposta('d')">D) Carregando...</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banco de dados com o gabarito totalmente misturado entre A, B, C e D
+        const perguntas = [
+            {
+                pergunta: "[HISTÓRIA 1/10] Qual medida marcou o auge da repressão na Ditadura Militar, dando poder ao presidente para fechar o Congresso e cassar mandatos?",
+                a: "A) A promulgação da Constituição de 1967",
+                b: "B) A assinatura do Ato Institucional Nº 5 (AI-5)",
+                c: "C) A criação do milagre econômico pelo Pacote de Abril",
+                d: "D) A implementação da Lei de Anistia Geral",
+                correta: "b"
+            },
+            {
+                pergunta: "[HISTÓRIA 2/10] Quem foi o primeiro presidente militar após o golpe de Estado de 1964?",
+                a: "A) Humberto de Alencar Castelo Branco",
+                b: "B) Arthur da Costa e Silva",
+                c: "C) Emílio Garrastazu Médici",
+                d: "D) Ernesto Geisel",
+                correta: "a"
+            },
+            {
+                pergunta: "[HISTÓRIA 3/10] Qual slogan oficial do governo Médici era intensamente utilizado para abafar as críticas ao regime e exaltar o nacionalismo?",
+                a: "A) Ordem e Progresso",
+                b: "B) Governe é povoar",
+                c: "C) Brasil: Ame-o ou deixe-o",
+                d: "D) Cinquenta anos em cinco",
+                correta: "c"
+            },
+            {
+                pergunta: "[HISTÓRIA 4/10] Como ficou conhecido o grande movimento popular de 1984 que exigia eleições diretas para presidente no Brasil?",
+                a: "A) Diretas Já",
+                b: "B) Passe Livre",
+                c: "C) Caras-Pintadas",
+                d: "D) Passeata dos Cem Mil",
+                correta: "a"
+            },
+            {
+                pergunta: "[HISTÓRIA 5/10] Durante o regime militar, o sistema partidário brasileiro foi reduzido ao bipartidarismo. Quais eram esses dois únicos partidos permitidos?",
+                a: "A) PTB e UDN",
+                b: "B) PSD e PT",
+                c: "C) Aliança Liberal e Integralistas",
+                d: "D) ARENA (governo) e MDB (oposição)",
+                correta: "d"
+            },
+            {
+                pergunta: "[HISTÓRIA 6/10] Qual presidente militar iniciou o processo de abertura política, classificado por ele como 'lenta, gradual e segura'?",
+                a: "A) Emílio Médici",
+                b: "B) Ernesto Geisel",
+                c: "C) João Figueiredo",
+                d: "D) Costa e Silva",
+                correta: "b"
+            },
+            {
+                pergunta: "[HISTÓRIA 7/10] Aprovada em 1979, o que determinava a Lei de Anistia no contexto da transição política?",
+                a: "A) O fechamento definitivo de sindicatos",
+                b: "B) A censura prévia integral de canais de televisão",
+                c: "C) O perdão político para exilados/opositores e também para agentes do Estado",
+                d: "D) A prisão imediata de todos os parlamentares cassados",
+                correta: "c"
+            },
+            {
+                pergunta: "[HISTÓRIA 8/10] Quem foi o civil eleito indiretamente em 1985, marcando o fim oficial do regime militar, embora tenha falecido antes de assumir a presidência?",
+                a: "A) Tancredo Neves",
+                b: "B) José Sarney",
+                c: "C) Ulysses Guimarães",
+                d: "D) João Goulart",
+                correta: "a"
+            },
+            {
+                pergunta: "[HISTÓRIA 9/10] Em qual setor econômico a Ditadura Militar realizou grandes investimentos e obras faraônicas, como a construção da Usina de Itaipu e da Transamazônica?",
+                a: "A) Exportação de tecnologia de software",
+                b: "B) Agricultura de subsistência",
+                c: "C) Reforma agrária popular",
+                d: "D) Infraestrutura, energia e transportes",
+                correta: "d"
+            },
+            {
+                pergunta: "[HISTÓRIA 10/10] Qual constituição histórica restabeleceu completamente a democracia, os direitos civis e o voto direto no Brasil no ano de 1988?",
+                a: "A) Constituição de Outorga",
+                b: "B) Constituição Cidadã",
+                c: "C) Constituição da Mandioca",
+                d: "D) Constituição Polaca",
+                correta: "b"
+            }
+        ];
+
+        let perguntaAtual = 0;
+
+        function carregarPergunta() {
+            if (perguntaAtual < perguntas.length) {
+                const dados = perguntas[perguntaAtual];
+                document.getElementById('texto-pergunta').innerText = dados.pergunta;
+                document.getElementById('btn-a').innerText = dados.a;
+                document.getElementById('btn-b').innerText = dados.b;
+                document.getElementById('btn-c').innerText = dados.c;
+                document.getElementById('btn-d').innerText = dados.d;
+            } else {
+                document.getElementById('interface-quiz').innerHTML = `
+                    <div class="pergunta-box">
+                        <h2>Parabéns! Você concluiu o Quiz com sucesso! 🏆</h2>
+                    </div>
+                `;
+            }
+        }
+
+        function verificarResposta(opcao) {
+            const fundoEstatico = document.getElementById('fundo-estatico');
+            const interfaceQuiz = document.getElementById('interface-quiz');
+            
+            const acertou = (opcao === perguntas[perguntaAtual].correta);
+            
+            let videoSelecionado;
+            if (acertou) {
+                videoSelecionado = document.getElementById(`video-acerto-${opcao}`);
+            } else {
+                videoSelecionado = document.getElementById(`video-erro-${opcao}`);
+            }
+
+            if (!videoSelecionado) return;
+
+            videoSelecionado.style.display = 'block';
+            videoSelecionado.play();
+
+            fundoEstatico.classList.add('escondido');
+            interfaceQuiz.classList.add('escondido');
+
+            videoSelecionado.onended = function() {
+                videoSelecionado.style.display = 'none';
+                
+                if (acertou) {
+                    perguntaAtual++;
+                }
+                
+                carregarPergunta();
+
+                fundoEstatico.classList.remove('escondido');
+                interfaceQuiz.classList.remove('escondido');
+            };
+        }
+
+        carregarPergunta();
+    </script>
+</body>
+</html>
